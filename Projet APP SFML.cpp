@@ -1,180 +1,474 @@
-// Projet APP SFML.cpp : Définit le point d'entrée de l'application.
-//
+#include <SFML/Graphics.hpp>
 
-#include "framework.h"
-#include "Projet APP SFML.h"
+#include <deque>
 
-#define MAX_LOADSTRING 100
+#include <cstdlib>
 
-// Variables globales :
-HINSTANCE hInst;                                // instance actuelle
-WCHAR szTitle[MAX_LOADSTRING];                  // Texte de la barre de titre
-WCHAR szWindowClass[MAX_LOADSTRING];            // nom de la classe de fenêtre principale
+#include <ctime>
 
-// Déclarations anticipées des fonctions incluses dans ce module de code :
-ATOM                MyRegisterClass(HINSTANCE hInstance);
-BOOL                InitInstance(HINSTANCE, int);
-LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
-int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
-                     _In_opt_ HINSTANCE hPrevInstance,
-                     _In_ LPWSTR    lpCmdLine,
-                     _In_ int       nCmdShow)
-{
-    UNREFERENCED_PARAMETER(hPrevInstance);
-    UNREFERENCED_PARAMETER(lpCmdLine);
 
-    // TODO: Placez le code ici.
+class Snake {
 
-    // Initialise les chaînes globales
-    LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadStringW(hInstance, IDC_PROJETAPPSFML, szWindowClass, MAX_LOADSTRING);
-    MyRegisterClass(hInstance);
+public:
 
-    // Effectue l'initialisation de l'application :
-    if (!InitInstance (hInstance, nCmdShow))
-    {
-        return FALSE;
+    Snake(int block_size, int width, int height)
+
+        : block_size(block_size), width(width), height(height), direction(sf::Vector2i(1, 0)) {
+
+        reset();
+
     }
 
-    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_PROJETAPPSFML));
 
-    MSG msg;
 
-    // Boucle de messages principale :
-    while (GetMessage(&msg, nullptr, 0, 0))
-    {
-        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
+    void reset() {
+
+        body.clear();
+
+        body.push_front(sf::Vector2i(5, 5));
+
+        for (int i = 1; i < 5; i++) {
+
+            body.push_back(sf::Vector2i(5 - i, 5));
+
         }
+
+        direction = sf::Vector2i(1, 0);
+
     }
 
-    return (int) msg.wParam;
-}
+
+
+    void move() {
+
+        sf::Vector2i new_head = body.front() + direction;
 
 
 
-//
-//  FONCTION : MyRegisterClass()
-//
-//  OBJECTIF : Inscrit la classe de fenêtre.
-//
-ATOM MyRegisterClass(HINSTANCE hInstance)
-{
-    WNDCLASSEXW wcex;
+        if (new_head.x < 0) new_head.x = width - 1;
 
-    wcex.cbSize = sizeof(WNDCLASSEX);
+        if (new_head.y < 0) new_head.y = height - 1;
 
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc    = WndProc;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_PROJETAPPSFML));
-    wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_PROJETAPPSFML);
-    wcex.lpszClassName  = szWindowClass;
-    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+        if (new_head.x >= width) new_head.x = 0;
 
-    return RegisterClassExW(&wcex);
-}
+        if (new_head.y >= height) new_head.y = 0;
 
-//
-//   FONCTION : InitInstance(HINSTANCE, int)
-//
-//   OBJECTIF : enregistre le handle d'instance et crée une fenêtre principale
-//
-//   COMMENTAIRES :
-//
-//        Dans cette fonction, nous enregistrons le handle de l'instance dans une variable globale, puis
-//        nous créons et affichons la fenêtre principale du programme.
-//
-BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
-{
-   hInst = hInstance; // Stocke le handle d'instance dans la variable globale
 
-   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
 
-   if (!hWnd)
-   {
-      return FALSE;
-   }
+        body.push_front(new_head);
 
-   ShowWindow(hWnd, nCmdShow);
-   UpdateWindow(hWnd);
+        body.pop_back();
 
-   return TRUE;
-}
+    }
 
-//
-//  FONCTION : WndProc(HWND, UINT, WPARAM, LPARAM)
-//
-//  OBJECTIF : Traite les messages pour la fenêtre principale.
-//
-//  WM_COMMAND  - traite le menu de l'application
-//  WM_PAINT    - Dessine la fenêtre principale
-//  WM_DESTROY  - génère un message d'arrêt et retourne
-//
-//
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    switch (message)
-    {
-    case WM_COMMAND:
-        {
-            int wmId = LOWORD(wParam);
-            // Analyse les sélections de menu :
-            switch (wmId)
-            {
-            case IDM_ABOUT:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-                break;
-            case IDM_EXIT:
-                DestroyWindow(hWnd);
-                break;
-            default:
-                return DefWindowProc(hWnd, message, wParam, lParam);
+
+
+    void grow() {
+
+        body.push_back(body.back());
+
+    }
+
+
+
+    void setDirection(const sf::Vector2i& new_direction) {
+
+        if (new_direction + direction != sf::Vector2i(0, 0)) {
+
+            direction = new_direction;
+
+        }
+
+    }
+
+
+
+    bool checkCollision() {
+
+        for (size_t i = 1; i < body.size(); i++) {
+
+            if (body[i] == body.front()) {
+
+                return true;
+
             }
+
         }
-        break;
-    case WM_PAINT:
-        {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hWnd, &ps);
-            // TODO: Ajoutez ici le code de dessin qui utilise hdc...
-            EndPaint(hWnd, &ps);
-        }
-        break;
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        break;
-    default:
-        return DefWindowProc(hWnd, message, wParam, lParam);
+
+        return false;
+
     }
-    return 0;
+
+
+
+    void draw(sf::RenderWindow& window) {
+
+        for (auto& segment : body) {
+
+            sf::RectangleShape rect(sf::Vector2f(block_size, block_size));
+
+            rect.setPosition(segment.x * block_size, segment.y * block_size);
+
+            rect.setFillColor(sf::Color::Red);
+
+            window.draw(rect);
+
+        }
+
+    }
+
+
+
+    const sf::Vector2i& getHead() const {
+
+        return body.front();
+
+    }
+
+
+
+private:
+
+    int block_size;
+
+    int width, height;
+
+    std::deque<sf::Vector2i> body;
+
+    sf::Vector2i direction;
+
+};
+
+
+
+class Food {
+
+public:
+
+    Food(int block_size, int width, int height)
+
+        : block_size(block_size), width(width), height(height) {
+
+        spawn();
+
+    }
+
+
+
+    void spawn() {
+
+        food_position.x = rand() % width;
+
+        food_position.y = rand() % height;
+
+    }
+
+
+
+    void draw(sf::RenderWindow& window) {
+
+        sf::RectangleShape rect(sf::Vector2f(block_size, block_size));
+
+        rect.setPosition(food_position.x * block_size, food_position.y * block_size);
+
+        rect.setFillColor(sf::Color::Green);
+
+        window.draw(rect);
+
+    }
+
+
+
+    const sf::Vector2i& getPosition() const {
+
+        return food_position;
+
+    }
+
+
+
+private:
+
+    int block_size;
+
+    int width, height;
+
+    sf::Vector2i food_position;
+
+};
+
+
+
+// Dessiner le fond (ciel bleu, soleil, nuages)
+
+void drawBackground(sf::RenderWindow& window) {
+
+    // Ciel bleu
+
+    sf::RectangleShape sky(sf::Vector2f(window.getSize().x, window.getSize().y));
+
+    sky.setFillColor(sf::Color(135, 206, 235)); // Couleur bleu ciel
+
+    window.draw(sky);
+
+
+
+    // Soleil
+
+    sf::CircleShape sun(50); // Cercle de rayon 50
+
+    sun.setFillColor(sf::Color::Yellow);
+
+    sun.setPosition(650, 50); // Position dans le coin supérieur droit
+
+    window.draw(sun);
+
+
+
+    // Nuages
+
+    sf::CircleShape cloud1(30);
+
+    cloud1.setFillColor(sf::Color::White);
+
+    cloud1.setPosition(100, 100); // Premier nuage
+
+    window.draw(cloud1);
+
+
+
+    sf::CircleShape cloud2(40);
+
+    cloud2.setFillColor(sf::Color::White);
+
+    cloud2.setPosition(130, 110);
+
+    window.draw(cloud2);
+
+
+
+    sf::CircleShape cloud3(30);
+
+    cloud3.setFillColor(sf::Color::White);
+
+    cloud3.setPosition(160, 100);
+
+    window.draw(cloud3);
+
+
+
+    // Deuxième nuage
+
+    sf::CircleShape cloud4(30);
+
+    cloud4.setFillColor(sf::Color::White);
+
+    cloud4.setPosition(400, 200);
+
+    window.draw(cloud4);
+
+
+
+    sf::CircleShape cloud5(40);
+
+    cloud5.setFillColor(sf::Color::White);
+
+    cloud5.setPosition(430, 210);
+
+    window.draw(cloud5);
+
+
+
+    sf::CircleShape cloud6(30);
+
+    cloud6.setFillColor(sf::Color::White);
+
+    cloud6.setPosition(460, 200);
+
+    window.draw(cloud6);
+
 }
 
-// Gestionnaire de messages pour la boîte de dialogue À propos de.
-INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    UNREFERENCED_PARAMETER(lParam);
-    switch (message)
-    {
-    case WM_INITDIALOG:
-        return (INT_PTR)TRUE;
 
-    case WM_COMMAND:
-        if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
-        {
-            EndDialog(hDlg, LOWORD(wParam));
-            return (INT_PTR)TRUE;
-        }
-        break;
+
+int main() {
+
+    srand(static_cast<unsigned int>(time(0)));
+
+    sf::RenderWindow window(sf::VideoMode(800, 600), "Snake Game");
+
+    window.setFramerateLimit(10);
+
+
+
+    int block_size = 20;
+
+    int grid_width = window.getSize().x / block_size;
+
+    int grid_height = window.getSize().y / block_size;
+
+
+
+    Snake snake(block_size, grid_width, grid_height);
+
+    Food food(block_size, grid_width, grid_height);
+
+
+
+    sf::Clock clock;
+
+    bool game_over = false;
+
+
+
+    sf::Font font;
+
+    if (!font.loadFromFile("arial.ttf")) {
+
+        return -1; // Charger une police pour afficher du texte
+
     }
-    return (INT_PTR)FALSE;
+
+
+
+    sf::Text game_over_text;
+
+    game_over_text.setFont(font);
+
+    game_over_text.setString("Game Over! Press R to Restart");
+
+    game_over_text.setCharacterSize(30);
+
+    game_over_text.setFillColor(sf::Color::White);
+
+    game_over_text.setPosition(150, 250);
+
+
+
+    while (window.isOpen()) {
+
+        sf::Time deltaTime = clock.restart();
+
+
+
+        sf::Event event;
+
+        while (window.pollEvent(event)) {
+
+            if (event.type == sf::Event::Closed)
+
+                window.close();
+
+
+
+            if (event.type == sf::Event::KeyPressed) {
+
+                if (!game_over) {
+
+                    if (event.key.code == sf::Keyboard::Up) {
+
+                        snake.setDirection(sf::Vector2i(0, -1));
+
+                    }
+
+                    if (event.key.code == sf::Keyboard::Down) {
+
+                        snake.setDirection(sf::Vector2i(0, 1));
+
+                    }
+
+                    if (event.key.code == sf::Keyboard::Left) {
+
+                        snake.setDirection(sf::Vector2i(-1, 0));
+
+                    }
+
+                    if (event.key.code == sf::Keyboard::Right) {
+
+                        snake.setDirection(sf::Vector2i(1, 0));
+
+                    }
+
+                }
+                else {
+
+                    if (event.key.code == sf::Keyboard::R) {
+
+                        game_over = false;
+
+                        snake.reset();
+
+                        food.spawn();
+
+                    }
+
+                }
+
+            }
+
+        }
+
+
+
+        if (!game_over) {
+
+            snake.move();
+
+
+
+            if (snake.getHead() == food.getPosition()) {
+
+                snake.grow();
+
+                food.spawn();
+
+            }
+
+
+
+            if (snake.checkCollision()) {
+
+                game_over = true;
+
+            }
+
+        }
+
+
+
+        window.clear();
+
+
+
+        // Dessiner le fond
+
+        drawBackground(window);
+
+
+
+        // Dessiner les objets
+
+        snake.draw(window);
+
+        food.draw(window);
+
+
+
+        if (game_over) {
+
+            window.draw(game_over_text);
+
+        }
+
+
+
+        window.display();
+
+    }
+
+
+
+    return 0;
+
 }
