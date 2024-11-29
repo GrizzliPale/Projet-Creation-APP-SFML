@@ -1,11 +1,10 @@
 #include <SFML/Graphics.hpp>
-
+#include <windows.h>
 #include <deque>
 
 #include <cstdlib>
 
 #include <ctime>
-
 
 
 class Snake {
@@ -19,8 +18,6 @@ public:
         reset();
 
     }
-
-
 
     void reset() {
 
@@ -37,8 +34,6 @@ public:
         direction = sf::Vector2i(1, 0);
 
     }
-
-
 
     void move() {
 
@@ -62,15 +57,11 @@ public:
 
     }
 
-
-
     void grow() {
 
         body.push_back(body.back());
 
     }
-
-
 
     void setDirection(const sf::Vector2i& new_direction) {
 
@@ -81,8 +72,6 @@ public:
         }
 
     }
-
-
 
     bool checkCollision() {
 
@@ -99,8 +88,6 @@ public:
         return false;
 
     }
-
-
 
     void draw(sf::RenderWindow& window) {
 
@@ -126,8 +113,6 @@ public:
 
     }
 
-
-
 private:
 
     int block_size;
@@ -139,8 +124,6 @@ private:
     sf::Vector2i direction;
 
 };
-
-
 
 class Food {
 
@@ -154,8 +137,6 @@ public:
 
     }
 
-
-
     void spawn() {
 
         food_position.x = rand() % width;
@@ -163,8 +144,6 @@ public:
         food_position.y = rand() % height;
 
     }
-
-
 
     void draw(sf::RenderWindow& window) {
 
@@ -178,15 +157,11 @@ public:
 
     }
 
-
-
     const sf::Vector2i& getPosition() const {
 
         return food_position;
 
     }
-
-
 
 private:
 
@@ -198,100 +173,6 @@ private:
 
 };
 
-
-
-// Dessiner le fond (ciel bleu, soleil, nuages)
-
-void drawBackground(sf::RenderWindow& window) {
-
-    // Ciel bleu
-
-    sf::RectangleShape sky(sf::Vector2f(window.getSize().x, window.getSize().y));
-
-    sky.setFillColor(sf::Color(135, 206, 235)); // Couleur bleu ciel
-
-    window.draw(sky);
-
-
-
-    // Soleil
-
-    sf::CircleShape sun(50); // Cercle de rayon 50
-
-    sun.setFillColor(sf::Color::Yellow);
-
-    sun.setPosition(650, 50); // Position dans le coin supérieur droit
-
-    window.draw(sun);
-
-
-
-    // Nuages
-
-    sf::CircleShape cloud1(30);
-
-    cloud1.setFillColor(sf::Color::White);
-
-    cloud1.setPosition(100, 100); // Premier nuage
-
-    window.draw(cloud1);
-
-
-
-    sf::CircleShape cloud2(40);
-
-    cloud2.setFillColor(sf::Color::White);
-
-    cloud2.setPosition(130, 110);
-
-    window.draw(cloud2);
-
-
-
-    sf::CircleShape cloud3(30);
-
-    cloud3.setFillColor(sf::Color::White);
-
-    cloud3.setPosition(160, 100);
-
-    window.draw(cloud3);
-
-
-
-    // Deuxième nuage
-
-    sf::CircleShape cloud4(30);
-
-    cloud4.setFillColor(sf::Color::White);
-
-    cloud4.setPosition(400, 200);
-
-    window.draw(cloud4);
-
-
-
-    sf::CircleShape cloud5(40);
-
-    cloud5.setFillColor(sf::Color::White);
-
-    cloud5.setPosition(430, 210);
-
-    window.draw(cloud5);
-
-
-
-    sf::CircleShape cloud6(30);
-
-    cloud6.setFillColor(sf::Color::White);
-
-    cloud6.setPosition(460, 200);
-
-    window.draw(cloud6);
-
-}
-
-
-
 int main() {
 
     srand(static_cast<unsigned int>(time(0)));
@@ -301,7 +182,6 @@ int main() {
     window.setFramerateLimit(10);
 
 
-
     int block_size = 20;
 
     int grid_width = window.getSize().x / block_size;
@@ -309,28 +189,21 @@ int main() {
     int grid_height = window.getSize().y / block_size;
 
 
-
     Snake snake(block_size, grid_width, grid_height);
 
     Food food(block_size, grid_width, grid_height);
-
-
 
     sf::Clock clock;
 
     bool game_over = false;
 
-
-
     sf::Font font;
 
-    if (!font.loadFromFile("arial.ttf")) {
+    /*if (!font.loadFromFile("arial.ttf")) {
 
         return -1; // Charger une police pour afficher du texte
 
-    }
-
-
+    }*/
 
     sf::Text game_over_text;
 
@@ -344,13 +217,9 @@ int main() {
 
     game_over_text.setPosition(150, 250);
 
-
-
     while (window.isOpen()) {
 
         sf::Time deltaTime = clock.restart();
-
-
 
         sf::Event event;
 
@@ -359,8 +228,6 @@ int main() {
             if (event.type == sf::Event::Closed)
 
                 window.close();
-
-
 
             if (event.type == sf::Event::KeyPressed) {
 
@@ -409,13 +276,9 @@ int main() {
 
         }
 
-
-
-        if (!game_over) {
+            if (!game_over) {
 
             snake.move();
-
-
 
             if (snake.getHead() == food.getPosition()) {
 
@@ -425,8 +288,6 @@ int main() {
 
             }
 
-
-
             if (snake.checkCollision()) {
 
                 game_over = true;
@@ -435,17 +296,11 @@ int main() {
 
         }
 
-
-
         window.clear();
-
-
 
         // Dessiner le fond
 
-        drawBackground(window);
-
-
+        //drawBackground(window);
 
         // Dessiner les objets
 
@@ -453,21 +308,15 @@ int main() {
 
         food.draw(window);
 
-
-
         if (game_over) {
 
             window.draw(game_over_text);
 
         }
 
-
-
         window.display();
 
     }
-
-
 
     return 0;
 
